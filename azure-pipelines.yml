@@ -33,13 +33,13 @@ steps:
      inputs:
        secureFile: 'azuredevops.json'
        
-- script: |
-     cd $(Agent.BuildDirectory)/
-     cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
-     gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops.json
-     export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops.json
-     git clone https://github.com/fariasyed/terraform-example-foundation.git
-    
+   - script: |
+        cd $(Agent.BuildDirectory)/
+        cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
+        gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops.json
+        export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops.json
+        git clone https://github.com/fariasyed/terraform-example-foundation.git
+        
                  
 
 
