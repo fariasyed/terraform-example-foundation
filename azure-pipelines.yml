@@ -44,14 +44,14 @@ steps:
         cd 0-bootstrap
         mv terraform.example.tfvars terraform.tfvars
         echo '''
-        org_id = ${{variables.org_id}} 
-        billing_account = ${{variables.billing_account}}
-        group_billing_admins  = ${{variables.group_billing_admins}} 
-        group_org_admins = ${{variables.group_org_admins}}
-        default_region = ${{variables.default_region}}
-        parent_folder = ${{variables.parent_folder}}
-        folder_prefix = ${{variables.folder_prefix}}
-        project_prefix  = ${{variables.project_prefix}}
+        org_id = "${{variables.org_id}}"
+        billing_account = "${{variables.billing_account}}"
+        group_billing_admins  = "${{variables.group_billing_admins}}" 
+        group_org_admins = "${{variables.group_org_admins}}"
+        default_region = "${{variables.default_region}}"
+        parent_folder = "${{variables.parent_folder}}"
+        folder_prefix = "${{variables.folder_prefix}}"
+        project_prefix  = "${{variables.project_prefix}}"
         ''' > terraform.tfvars
         terraform init
         terraform plan -input=false -out bootstrap.tfplan
