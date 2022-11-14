@@ -1,0 +1,30 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  name: "mac-faria"
+  #vmImage: ubuntu-latest
+
+variables:
+- name: org_id
+  value: "752089912425"
+- name: billing_account
+  value: "013B19-B6B12E-6CC016"
+- name: group_org_admins
+  value: "group_org_admins@gcp-lz-endava.com"
+- name: group_billing_admins
+  value: "group_billing_admins@gcp-lz-endava.com"
+- name: default_region
+  value:  "europe-west2"
+- name: parent_folder
+  value: "720184215194"
+- name: folder_prefix
+  value: "med"
+- name: project_prefix 
+  value: "ned"            
+
