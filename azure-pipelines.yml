@@ -39,7 +39,7 @@ steps:
         gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops.json
         export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops.json
         git clone https://github.com/fariasyed/terraform-example-foundation.git
-        gcloud components install --quiet
+        gcloud components install beta --quiet
         cd terraform-example-foundation
         cd 0-bootstrap
         mv terraform.example.tfvars terraform.tfvars
