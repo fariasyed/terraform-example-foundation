@@ -98,7 +98,14 @@ steps:
         git add .
         git commit -m 'Initialize bootstrap'
         git push --set-upstream origin production
-        cd ..
+        cd $(Agent.BuildDirectory)/
+     workingDirectory: $(Agent.BuildDirectory)/  
+     displayName: 'bootstrap'
+   - script: |
+        cd $(Agent.BuildDirectory)/
+        cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
+        gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
+        export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
         export CLOUD_BUILD_PROJECT_ID=$(terraform -chdir="terraform-example-foundation/0-bootstrap/" output -raw cloudbuild_project_id)
         echo ${CLOUD_BUILD_PROJECT_ID}
         gcloud source repos clone gcp-policies --project=${CLOUD_BUILD_PROJECT_ID}
@@ -139,7 +146,6 @@ steps:
         git push --set-upstream origin plan
         git checkout -b production
         git push origin production 
-
-
-
+     workingDirectory: $(Agent.BuildDirectory)/  
+     displayName: 'org'  
 
