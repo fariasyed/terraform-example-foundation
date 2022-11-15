@@ -17,7 +17,7 @@ variables:
 - name: default_region
   value:  "europe-west2"
 - name: parent_folder
-  value: "754883958339"
+  value: "9461248996"
 - name: folder_prefix
   value: "med"
 - name: project_prefix 
@@ -102,13 +102,7 @@ stages:
         git add .
         git commit -m 'Initialize bootstrap'
         git push --set-upstream origin production
-        cd $(Agent.BuildDirectory)/
-      workingDirectory: $(Agent.BuildDirectory)/  
-      displayName: 'bootstrap'
-
-  - job:  
-    steps:
-    - script: |
+        cd ..
         export CLOUD_BUILD_PROJECT_ID=$(terraform -chdir="terraform-example-foundation/0-bootstrap/" output -raw cloudbuild_project_id)
         echo ${CLOUD_BUILD_PROJECT_ID}
         gcloud source repos clone gcp-policies --project=${CLOUD_BUILD_PROJECT_ID}
@@ -149,6 +143,4 @@ stages:
         git push --set-upstream origin plan
         git checkout -b production
         git push origin production 
-      workingDirectory: $(Agent.BuildDirectory)/  
-      displayName: 'org'  
-
+      
