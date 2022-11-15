@@ -17,7 +17,7 @@ variables:
 - name: default_region
   value:  "europe-west2"
 - name: parent_folder
-  value: "798333110955"
+  value: "1026342955204"
 - name: folder_prefix
   value: "med"
 - name: project_prefix 
@@ -37,14 +37,21 @@ variables:
 - name: create_access_context_manager_access_policy
   value: 'false'
 - name: create_unique_tag_key 
-  value: 'true'               
-steps:
-   - task: DownloadSecureFile@1
-     name: azure
-     inputs:
+  value: 'true' 
+stages: 
+- stage: Download
+  jobs:
+  - job: DownloadJob               
+    steps:
+    - task: DownloadSecureFile@1
+      name: azure
+      inputs:
        secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
-
-   - script: |
+- stage: 
+  jobs:
+  - job: Bootstrap
+    steps:
+    - script: |
         cd $(Agent.BuildDirectory)/
         cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
         gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
@@ -99,9 +106,13 @@ steps:
         git commit -m 'Initialize bootstrap'
         git push --set-upstream origin production
         cd $(Agent.BuildDirectory)/
-     workingDirectory: $(Agent.BuildDirectory)/  
-     displayName: 'bootstrap'
-   - script: |
+      workingDirectory: $(Agent.BuildDirectory)/  
+      displayName: 'bootstrap'
+- stage: Org layer
+  jobs:
+  - job:  
+    steps:
+    - script: |
         cd $(Agent.BuildDirectory)/
         cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
         gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
@@ -146,6 +157,6 @@ steps:
         git push --set-upstream origin plan
         git checkout -b production
         git push origin production 
-     workingDirectory: $(Agent.BuildDirectory)/  
-     displayName: 'org'  
+      workingDirectory: $(Agent.BuildDirectory)/  
+      displayName: 'org'  
 
