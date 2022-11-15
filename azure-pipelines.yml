@@ -86,6 +86,9 @@ steps:
 
         gcloud source repos clone gcp-bootstrap --project=${cloudbuild_project_id}
         cd gcp-bootstrap
+        git config --global user.email "faria.nasir@gcp-lz-endava.com"
+        git config --global user.name "faria nasir"
+
         git checkout -b production
         cp -RT ../terraform-example-foundation/0-bootstrap/ .
 
