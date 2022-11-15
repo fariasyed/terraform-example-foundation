@@ -49,7 +49,7 @@ stages:
        secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
 - stage: 
   jobs:
-  - job: Bootstrap
+  - job: Bootstrap_layer
     steps:
     - script: |
         cd $(Agent.BuildDirectory)/
@@ -108,7 +108,7 @@ stages:
         cd $(Agent.BuildDirectory)/
       workingDirectory: $(Agent.BuildDirectory)/  
       displayName: 'bootstrap'
-- stage: Org layer
+- stage: Org_layer
   jobs:
   - job:  
     steps:
