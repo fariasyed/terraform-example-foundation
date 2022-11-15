@@ -47,8 +47,7 @@ stages:
       name: azure
       inputs:
        secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json' 
-  - job: Bootstrap_layer
-    steps:
+  
     - script: |
         cd $(Agent.BuildDirectory)/
         cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
