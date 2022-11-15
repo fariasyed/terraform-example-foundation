@@ -46,9 +46,7 @@ stages:
     - task: DownloadSecureFile@1
       name: azure
       inputs:
-       secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
-- stage: 
-  jobs:
+       secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json' 
   - job: Bootstrap_layer
     steps:
     - script: |
