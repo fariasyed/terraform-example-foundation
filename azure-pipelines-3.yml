@@ -1,0 +1,141 @@
+trigger:
+- master
+
+pool:
+  name: "mac-faria"
+  #vmImage: ubuntu-latest
+
+variables:
+- name: org_id
+  value: "752089912425"
+- name: billing_account
+  value: "013B19-B6B12E-6CC016"
+- name: group_billing_admins 
+  value: "group_billing_admins@gcp-lz-endava.com"
+- name: group_org_admins
+  value: "group_org_admins@gcp-lz-endava.com"
+- name: default_region
+  value:  "europe-west2"
+- name: parent_folder
+  value: "876124575731"
+- name: folder_prefix
+  value: "med"
+- name: project_prefix 
+  value: "ned"
+- name: domains_to_allow 
+  value: "gcp-lz-endava.com"
+- name: essential_contacts_domains_to_allow 
+  value: "gcp-lz-endava.com"
+- name: billing_data_users 
+  value: "group_org_admins@gcp-lz-endava.com"  
+- name: audit_data_users
+  value: "gcp-security-admins@gcp-lz-endava.com"
+- name: scc_notification_name
+  value: "907480293660"
+- name: enable_hub_and_spoke 
+  value: 'true'
+- name: create_access_context_manager_access_policy
+  value: 'false'
+- name: create_unique_tag_key 
+  value: 'true'               
+steps:
+   - task: DownloadSecureFile@1
+     name: azure
+     inputs:
+       secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
+
+   - script: |
+        cd $(Agent.BuildDirectory)/
+        cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
+        gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
+        export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
+        git clone https://github.com/fariasyed/terraform-example-foundation.git
+        gcloud components install beta --quiet
+        cd terraform-example-foundation
+        cd 0-bootstrap
+        mv terraform.example.tfvars terraform.tfvars
+        echo '''
+        org_id = "${{variables.org_id}}"
+        billing_account = "${{variables.billing_account}}"
+        group_billing_admins  = "${{variables.group_billing_admins}}" 
+        group_org_admins = "${{variables.group_org_admins}}"
+        default_region = "${{variables.default_region}}"
+        parent_folder = "${{variables.parent_folder}}"
+        folder_prefix = "${{variables.folder_prefix}}"
+        project_prefix  = "${{variables.project_prefix}}"
+        ''' > terraform.tfvars
+        terraform init
+        terraform plan -input=false -out bootstrap.tfplan
+        export VET_PROJECT_ID=A-VALID-PROJECT-ID
+        terraform show -json bootstrap.tfplan > bootstrap.json
+        gcloud beta terraform vet bootstrap.json --policy-library="../policy-library" --project ${VET_PROJECT_ID}
+        terraform apply bootstrap.tfplan
+        export network_step_sa=$(terraform output -raw networks_step_terraform_service_account_email)
+        export projects_step_sa=$(terraform output -raw projects_step_terraform_service_account_email)
+        export projects_gcs_bucket_tfstate=$(terraform output -raw projects_gcs_bucket_tfstate)
+        echo "network step service account = ${network_step_sa}"
+        echo "projects step service account = ${projects_step_sa}"
+        echo "projects gcs bucket tfstate = ${projects_gcs_bucket_tfstate}"
+        export cloudbuild_project_id=$(terraform output -raw cloudbuild_project_id)
+        echo "cloud build project ID = ${cloudbuild_project_id}"
+        export backend_bucket=$(terraform output -raw gcs_bucket_tfstate)
+        echo "backend_bucket = ${backend_bucket}"
+        export backend_bucket_projects=$(terraform output -raw projects_gcs_bucket_tfstate)
+        echo "backend_bucket_projects = ${backend_bucket_projects}"
+        cp backend.tf.example backend.tf
+        cd ..
+        for i in `find -name 'backend.tf'`; do sed -i "s/UPDATE_ME/${backend_bucket}/" $i; done
+        for i in `find -name 'backend.tf'`; do sed -i "s/UPDATE_PROJECTS_BACKEND/${backend_bucket_projects}/" $i; done
+        cd 0-bootstrap
+        terraform init -force-copy
+        cd ../..
+        gcloud source repos clone gcp-bootstrap --project=${cloudbuild_project_id}
+        cd gcp-bootstrap
+        git config --global user.email "faria.nasir@gcp-lz-endava.com"
+        git config --global user.name "faria nasir"
+        git checkout -b production
+        cp -RT ../terraform-example-foundation/0-bootstrap/ .
+        git add .
+        git commit -m 'Initialize bootstrap'
+        git push --set-upstream origin production
+        cd ..
+        export CLOUD_BUILD_PROJECT_ID=$(terraform -chdir="terraform-example-foundation/0-bootstrap/" output -raw cloudbuild_project_id)
+        echo ${CLOUD_BUILD_PROJECT_ID}
+        gcloud source repos clone gcp-policies --project=${CLOUD_BUILD_PROJECT_ID}
+        cd gcp-policies
+        git checkout -b main
+        cp -RT ../terraform-example-foundation/policy-library/ . 
+        git add .
+        git commit -m 'Your message'
+        git push --set-upstream origin main 
+        cd ..
+        gcloud source repos clone gcp-org --project=${CLOUD_BUILD_PROJECT_ID}
+        cd gcp-org
+        git checkout -b plan
+        cp -RT ../terraform-example-foundation/1-org/ .
+        cp ../terraform-example-foundation/build/cloudbuild-tf-* .
+        cp ../terraform-example-foundation/build/tf-wrapper.sh .
+        chmod 755 ./tf-wrapper.sh
+        cd envs
+        cd shared
+        mv terraform.example.tfvars .terraform.tfvars
+        echo '''
+        domains_to_allow = "${{variables.domains_to_allow}}"
+        essential_contacts_domains_to_allow = "${{variables.essential_contacts_domains_to_allow}}"
+        billing_data_users  = "${{variables.billing_data_users}}" 
+        audit_data_users = "${{variables.audit_data_users}}"
+        scc_notification_name = "${{variables.scc_notification_name}}"
+        enable_hub_and_spoke = "${{variables.enable_hub_and_spoke}}"
+        create_access_context_manager_access_policy = "${{variables.create_access_context_manager_access_policy}}"
+        create_unique_tag_key  = "${{variables.create_unique_tag_key}}"
+        ''' > terraform.tfvars
+        cd ../..
+        export backend_bucket=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -raw gcs_bucket_tfstate)
+        echo "remote_state_bucket = ${backend_bucket}"
+        sed -i "s/REMOTE_STATE_BUCKET/${backend_bucket}/" ./envs/shared/terraform.tfvars
+        if [ ! -z "${ACCESS_CONTEXT_MANAGER_ID}" ]; then sed -i "s=//create_access_context_manager_access_policy=create_access_context_manager_access_policy=" ./envs/shared/terraform.tfvars; fi
+        git add .
+        git commit -m 'Your message'
+        git push --set-upstream origin plan
+        git checkout -b production
+        git push origin production    
