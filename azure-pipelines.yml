@@ -81,7 +81,7 @@ steps:
         for i in `find -name 'backend.tf'`; do sed -i "s/UPDATE_PROJECTS_BACKEND/${backend_bucket_projects}/" $i; done
 
         cd 0-bootstrap
-        terraform init
+        terraform init -force-copy
         cd ../..
 
         gcloud source repos clone gcp-bootstrap --project=${cloudbuild_project_id}
