@@ -7,8 +7,8 @@ trigger:
 - master
 
 pool:
-  name: "mac-faria"
-  #vmImage: ubuntu-latest
+  #name: "mac-faria"
+  vmImage: ubuntu-latest
 
 variables:
 - name: org_id
