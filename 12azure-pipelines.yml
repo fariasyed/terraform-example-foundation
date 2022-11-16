@@ -17,11 +17,11 @@ variables:
 - name: default_region
   value:  "europe-west2"
 - name: parent_folder
-  value: "693484676561"
+  value: "705820705863"
 - name: folder_prefix
-  value: "med"
+  value: "wes"
 - name: project_prefix 
-  value: "ned"
+  value: "wes"
 - name: domains_to_allow 
   value: "gcp-lz-endava.com"
 - name: essential_contacts_domains_to_allow 
