@@ -40,20 +40,7 @@ variables:
   value: 'true' 
 - name: monitoring_workspace_users 
   value:  "gcp-monitoring-admins@gcp-lz-endava.com"
-stages: 
-- stage: Download
-  jobs:
-  - job: DownloadJob               
-    steps:
-    - task: CopyFiles@2
-      inputs:
-        Contents: '**'
-        TargetFolder: '$(build.artifactstagingdirectory)'
-    - task: PublishBuildArtifacts@1
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        ArtifactName: 'drop'
-        publishLocation: 'Container'
+steps:
     - task: DownloadSecureFile@1
       name: azure
       inputs:
