@@ -45,6 +45,15 @@ stages:
   jobs:
   - job: DownloadJob               
     steps:
+    - task: CopyFiles@2
+      inputs:
+        Contents: '**'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
     - task: DownloadSecureFile@1
       name: azure
       inputs:
@@ -135,16 +144,44 @@ stages:
         create_access_context_manager_access_policy = "${{variables.create_access_context_manager_access_policy}}"
         create_unique_tag_key  = "${{variables.create_unique_tag_key}}"
         ''' > terraform.tfvars
-        cd../..
         export backend_bucket=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -raw gcs_bucket_tfstate)
         echo "remote_state_bucket = ${backend_bucket}"
+        cd../..
         sed -i "s/REMOTE_STATE_BUCKET/${backend_bucket}/" ./envs/shared/terraform.tfvars
         if [ ! -z "${ACCESS_CONTEXT_MANAGER_ID}" ]; then sed -i "s=//create_access_context_manager_access_policy=create_access_context_manager_access_policy=" ./envs/shared/terraform.tfvars; fi
         git add .
         git commit -m 'Your message'
         git push --set-upstream origin plan
         git checkout -b production
-        git push origin production 
+        git push origin production
+        cd ..
+        export CLOUD_BUILD_PROJECT_ID=$(terraform -chdir="terraform-example-foundation/0-bootstrap/" output -raw cloudbuild_project_id)
+        echo ${CLOUD_BUILD_PROJECT_ID}
+        gcloud source repos clone gcp-environments --project=${CLOUD_BUILD_PROJECT_ID}
+        cd gcp-environments
+        git checkout -b plan
+        cp -RT ../terraform-example-foundation/2-environments/ .
+        cp ../terraform-example-foundation/build/cloudbuild-tf-* .
+        cp ../terraform-example-foundation/build/tf-wrapper.sh .
+        chmod 755 ./tf-wrapper.sh 
+        mv terraform.example.tfvars terraform.tfvars 
+        echo '''
+        monitoring_workspace_users =  "${{variables.monitoring_workspace_users}}"
+        ''' > terraform.tfvars
+        export backend_bucket=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -raw gcs_bucket_tfstate)
+        echo "remote_state_bucket = ${backend_bucket}"
+        cd ..
+        sed -i "s/REMOTE_STATE_BUCKET/${backend_bucket}/" terraform.tfvars
+        git add .
+        git commit -m 'Your message'
+        git push --set-upstream origin plan
+        git checkout -b development
+        git push origin development
+        git checkout -b non-production
+        git push origin non-production
+        git checkout -b production
+        git push origin production
+
         
 
       
