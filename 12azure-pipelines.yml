@@ -2,7 +2,7 @@ trigger:
 - master
 
 pool:
-  name: "docker-pool"
+  name: 'docker-pool'
   #vmImage: ubuntu-latest
 
 variables:
@@ -17,11 +17,11 @@ variables:
 - name: default_region
   value:  "europe-west2"
 - name: parent_folder
-  value: "705820705863"
+  value: "798333110955"
 - name: folder_prefix
-  value: "wes"
+  value: "med"
 - name: project_prefix 
-  value: "wes"
+  value: "ned"
 - name: domains_to_allow 
   value: "gcp-lz-endava.com"
 - name: essential_contacts_domains_to_allow 
@@ -37,16 +37,14 @@ variables:
 - name: create_access_context_manager_access_policy
   value: 'false'
 - name: create_unique_tag_key 
-  value: 'true' 
-- name: monitoring_workspace_users 
-  value:  "gcp-monitoring-admins@gcp-lz-endava.com"
+  value: 'true'               
 steps:
-    - task: DownloadSecureFile@1
-      name: azure
-      inputs:
-       secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json' 
-  
-    - script: |
+   - task: DownloadSecureFile@1
+     name: azure
+     inputs:
+       secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
+
+   - script: |
         cd $(Agent.BuildDirectory)/
         cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
         gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
@@ -131,16 +129,16 @@ steps:
         create_access_context_manager_access_policy = "${{variables.create_access_context_manager_access_policy}}"
         create_unique_tag_key  = "${{variables.create_unique_tag_key}}"
         ''' > terraform.tfvars
+        cd ../..
         export backend_bucket=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -raw gcs_bucket_tfstate)
         echo "remote_state_bucket = ${backend_bucket}"
-        cd../..
         sed -i "s/REMOTE_STATE_BUCKET/${backend_bucket}/" ./envs/shared/terraform.tfvars
         if [ ! -z "${ACCESS_CONTEXT_MANAGER_ID}" ]; then sed -i "s=//create_access_context_manager_access_policy=create_access_context_manager_access_policy=" ./envs/shared/terraform.tfvars; fi
         git add .
         git commit -m 'Your message'
         git push --set-upstream origin plan
         git checkout -b production
-        git push origin production
+        git push origin production 
         cd ..
         export CLOUD_BUILD_PROJECT_ID=$(terraform -chdir="terraform-example-foundation/0-bootstrap/" output -raw cloudbuild_project_id)
         echo ${CLOUD_BUILD_PROJECT_ID}
@@ -157,7 +155,6 @@ steps:
         ''' > terraform.tfvars
         export backend_bucket=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -raw gcs_bucket_tfstate)
         echo "remote_state_bucket = ${backend_bucket}"
-        cd ..
         sed -i "s/REMOTE_STATE_BUCKET/${backend_bucket}/" terraform.tfvars
         git add .
         git commit -m 'Your message'
