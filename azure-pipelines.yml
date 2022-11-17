@@ -2,8 +2,8 @@ trigger:
 - master
 
 pool:
-  name: 'docker-pool'
-  #vmImage: ubuntu-latest
+  #name: 'docker-pool'
+  vmImage: ubuntu-latest
 
 variables:
 - name: org_id
