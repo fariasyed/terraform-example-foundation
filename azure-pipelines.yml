@@ -45,13 +45,13 @@ stages:
   - job: bootstrap
     steps:
     - task: DownloadSecureFile@1
-      name: serviceAccount
+      name: new
       inputs:
         secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
     
     - script: |
           cd $(Agent.BuildDirectory)/
-          cp $(azure.secureFilePath) $(Agent.BuildDirectory)/
+          cp $(new.secureFilePath) $(Agent.BuildDirectory)/
           gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
           export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
           git clone https://github.com/fariasyed/terraform-example-foundation.git
