@@ -43,7 +43,7 @@ steps:
     cd $(Agent.BuildDirectory)/
     cp $(grab.secureFilePath) $(Agent.BuildDirectory)/
     gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/grab.json
-    export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/cgrab.json
+    export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/grab.json
     rm -rf terraform-example-foundation.tar terraform-example-foundation
     gsutil -m cp gs://grab786/terraform-example-foundation.tar  .
     tar xvf terraform-example-foundation.tar terraform-example-foundation
