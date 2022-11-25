@@ -4,39 +4,33 @@ trigger:
 pool:
   #name: 'mac'
   vmImage: ubuntu-latest
+
 variables:
 - name: org_id
   value: "752089912425"
 - name: billing_account
   value: "013B19-B6B12E-6CC016"
-- name: group_billing_admins 
-  value: "group_billing_admins@gcp-lz-endava.com"
-- name: group_org_admins
+- name: org_admins
   value: "group_org_admins@gcp-lz-endava.com"
-- name: default_region
-  value:  "europe-west2"
-- name: parent_folder
-  value: "688014693983"
+- name: billing_admins
+  value: "group_billing_admins@gcp-lz-endava.com"
+- name: monitoring_email
+  value: "group_org_admins@gcp-lz-endava.com"
+- name: region
+  value: "europe-west2"
 - name: folder_prefix
   value: "med"
-- name: project_prefix 
+- name: project_prefix
   value: "ned"
-- name: domains_to_allow 
-  value: "gcp-lz-endava.com"
-- name: essential_contacts_domains_to_allow 
-  value: "gcp-lz-endava.com"
-- name: billing_data_users 
-  value: "group_org_admins@gcp-lz-endava.com"  
-- name: audit_data_users
-  value: "gcp-security-admins@gcp-lz-endava.com"
-- name: scc_notification_name
+- name: parent_folder
+  value: "264101001884"
+- name: vet_projectid
+  value: "azuredevops-orgadmin"
+- name: service_account
+  value: "faria-0rg-admin@azuredevops-orgadmin.iam.gserviceaccount.com"
+- name: scc
   value: "688014693983"
-- name: enable_hub_and_spoke 
-  value: 'true'
-- name: create_access_context_manager_access_policy
-  value: 'false'
-- name: create_unique_tag_key 
-  value: 'true'
+
                
 stages:
 - stage: MyStage
