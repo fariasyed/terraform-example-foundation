@@ -8,7 +8,7 @@ variables:
 - name: org_id
   value: "752089912425"
 - name: billing_account
-  value: "01C99F-1270F5-57272A"
+  value: "013B19-B6B12E-6CC016"
 - name: group_billing_admins 
   value: "group_billing_admins@gcp-lz-endava.com"
 - name: group_org_admins
@@ -16,7 +16,7 @@ variables:
 - name: default_region
   value:  "europe-west2"
 - name: parent_folder
-  value: "146748209372"
+  value: "479797484389"
 - name: folder_prefix
   value: "med"
 - name: project_prefix 
@@ -30,7 +30,7 @@ variables:
 - name: audit_data_users
   value: "gcp-security-admins@gcp-lz-endava.com"
 - name: scc_notification_name
-  value: "146748209372"
+  value: "479797484389"
 - name: enable_hub_and_spoke 
   value: 'true'
 - name: create_access_context_manager_access_policy
@@ -45,13 +45,13 @@ stages:
   - job: bootstrap
     steps:
     - task: DownloadSecureFile@1
-      name: new
+      name: docker
       inputs:
         secureFile: 'azuredevops-orgadmin-1d8fd63dcdc4.json'
     
     - script: |
           cd $(Agent.BuildDirectory)/
-          cp $(new.secureFilePath) $(Agent.BuildDirectory)/
+          cp $(docker.secureFilePath) $(Agent.BuildDirectory)/
           gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
           export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
           git clone https://github.com/fariasyed/terraform-example-foundation.git
