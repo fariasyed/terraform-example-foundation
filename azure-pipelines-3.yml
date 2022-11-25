@@ -98,13 +98,13 @@ steps:
     ./tf-wrapper.sh plan shared
     ./tf-wrapper.sh apply shared
     git push --set-upstream origin plan
-    sleep 600
+    sleep 500
     git checkout -b production
     git push origin production
-    sleep 600
+    sleep 500
     git checkout -b development
     git push origin development
-    sleep 600
+    sleep 500
     git checkout -b non-production
     git push origin non-production
     unset GOOGLE_IMPERSONATE_SERVICE_ACCOUNT
