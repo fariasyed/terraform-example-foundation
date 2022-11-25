@@ -1,0 +1,109 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+
+variables:
+- name: org_id
+  value: "752089912425"
+- name: billing_account
+  value: "013B19-B6B12E-6CC016"
+- name: org_admins
+  value: "group_org_admins@gcp-lz-endava.com"
+- name: billing_admins
+  value: "group_billing_admins@gcp-lz-endava.com"
+- name: monitoring_email
+  value: "group_org_admins@gcp-lz-endava.com"
+- name: region
+  value: "europe-west2"
+- name: folder_prefix
+  value: "grab"
+- name: project_prefix
+  value: "grab"
+- name: parent_folder
+  value: "521755815750"
+- name: vet_projectid
+  value: "azuredevops-orgadmin"
+- name: service_account
+  value: "prasanna-orgadmin-ado@azuredevops-orgadmin.iam.gserviceaccount.com"
+- name: scc
+  value: "521755815750"
+
+
+steps:
+- task: DownloadSecureFile@1
+  name: grab
+  displayName: 'Download credentials.json'
+  inputs:
+    secureFile: 'grab.json'
+    
+- script: |
+    cd $(Agent.BuildDirectory)/
+    cp $(grab.secureFilePath) $(Agent.BuildDirectory)/
+    gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/grab.json
+    export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/cgrab.json
+    rm -rf terraform-example-foundation.tar terraform-example-foundation
+    gsutil -m cp gs://grab786/terraform-example-foundation.tar  .
+    tar xvf terraform-example-foundation.tar terraform-example-foundation
+    echo "Printing current working directory - start of Org layer" 
+    pwd
+    ls -ltr
+    mkdir -p $(Agent.BuildDirectory)/terraform-example-foundation/credentials
+    cp $(GCPCredentials.secureFilePath) $(Agent.BuildDirectory)/terraform-example-foundation/credentials/
+    gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/terraform-example-foundation/credentials/credentials.json
+    cd $(Agent.BuildDirectory)/
+    export CLOUD_BUILD_PROJECT_ID=$(terraform -chdir="terraform-example-foundation/0-bootstrap/" output -raw cloudbuild_project_id)
+    echo ${CLOUD_BUILD_PROJECT_ID}
+    gcloud source repos clone gcp-policies --project=${CLOUD_BUILD_PROJECT_ID}  
+    cd gcp-policies
+    git config --global user.email "prasanna.veerabhadraiahgcp-lz-endava.com"
+    git config --global user.name "Prasanna Veerabhadraiah"
+    git checkout -b main
+    cp -RT ../terraform-example-foundation/policy-library/ .  
+    git add .
+    git commit -m 'Your message'
+    git push --set-upstream origin main
+    cd ..
+    gcloud source repos clone gcp-org --project=${CLOUD_BUILD_PROJECT_ID}
+    cd gcp-org
+    git config --global user.email "prasanna.veerabhadraiahgcp-lz-endava.com"
+    git config --global user.name "Prasanna Veerabhadraiah"
+    git checkout -b plan
+    cp -RT ../terraform-example-foundation/1-org/ .
+    cp ../terraform-example-foundation/build/cloudbuild-tf-* .
+    cp ../terraform-example-foundation/build/tf-wrapper.sh .
+    chmod 755 ./tf-wrapper.sh
+    mv ./envs/shared/terraform.example.tfvars ./envs/shared/terraform.tfvars
+    echo '''
+    domains_to_allow = ["gcp-lz-endava.com"]
+    essential_contacts_domains_to_allow = ["@gcp-lz-endava.com"]
+    billing_data_users = "gcp-billing-data-users@gcp-lz-endava.com"
+    audit_data_users = "gcp-security-admins@gcp-lz-endava.com"
+    scc_notification_name = "${{ variables.scc }}"
+    remote_state_bucket = "REMOTE_STATE_BUCKET"
+    enable_hub_and_spoke = true
+    create_access_context_manager_access_policy = false
+    create_unique_tag_key = true
+    ''' > ./envs/shared/terraform.tfvars
+
+    export ORGANIZATION_ID=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -json common_config | jq '.org_id' --raw-output)
+    gcloud scc notifications describe "${{ variables.scc }}" --organization=${ORGANIZATION_ID}
+    export ACCESS_CONTEXT_MANAGER_ID=$(gcloud access-context-manager policies list --organization ${ORGANIZATION_ID} --format="value(name)")
+    echo "access_context_manager_policy_id = ${ACCESS_CONTEXT_MANAGER_ID}"
+
+    export backend_bucket=$(terraform -chdir="../terraform-example-foundation/0-bootstrap/" output -raw gcs_bucket_tfstate)
+    echo "remote_state_bucket = ${backend_bucket}"
+    sed -i "s/REMOTE_STATE_BUCKET/${backend_bucket}/" ./envs/shared/terraform.tfvars
+    sed -i "s/scc-notify/${{ variables.scc }}/" ./envs/shared/terraform.tfvars
+
+    if [ ! -z "${ACCESS_CONTEXT_MANAGER_ID}" ]; then sed -i "s=//create_access_context_manager_access_policy=create_access_context_manager_access_policy=" ./envs/shared/terraform.tfvars; fi
+    git add .
+    git commit -m 'Your message'
+    git push --set-upstream origin plan
+    sleep 400
+    git checkout -b production
+    git push origin production
+
+  displayName: 'lz Org Layer'
