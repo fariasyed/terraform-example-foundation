@@ -41,7 +41,7 @@ steps:
     
 - script: |
     cd $(Agent.BuildDirectory)/
-    cp $(pool_servicesecureFilePath) $(Agent.BuildDirectory)/
+    cp $(pool_service.secureFilePath) $(Agent.BuildDirectory)/
     gcloud auth activate-service-account --key-file=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
     export GOOGLE_APPLICATION_CREDENTIALS=$(Agent.BuildDirectory)/azuredevops-orgadmin-1d8fd63dcdc4.json
     rm -rf terraform-example-foundation.tar terraform-example-foundation
